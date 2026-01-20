@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration; 
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -16,10 +17,16 @@ public static class OpenTelemetryExtensions
             .WithTracing(tracing =>
             {
                 tracing
+                    .AddSource(serviceName)
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation()
-                    .AddMassTransitInstrumentation()
+                    .AddSource("MassTransit") 
+                    .AddNpgsql() 
+                    .AddRedisInstrumentation(options => 
+                    {
+                        options.SetVerboseDatabaseStatements = true;
+                    }) 
                     .AddOtlpExporter(options =>
                     {
                         options.Endpoint = new Uri(jaegerEndpoint);

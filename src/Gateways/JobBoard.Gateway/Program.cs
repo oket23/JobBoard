@@ -8,7 +8,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
-        //підклюсити yarp 
+        builder.Services.AddReverseProxy()
+            .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
         
         builder.Services.AddJobBoardOpenTelemetry(builder.Configuration, "Gateway");
         

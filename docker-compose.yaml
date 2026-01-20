@@ -44,7 +44,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
-    
+  
   # --- Tracing (Jaeger) ---
   jaeger:
     container_name: jobboard-jaeger
@@ -58,7 +58,7 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
     networks:
       - jobboard-network
-      
+  
   # --- Distributed Cache ---
   redis:
     container_name: jobboard-redis
@@ -167,12 +167,8 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=identity_db;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true
       # Redis
       - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-redis123},defaultDatabase=0
-      # RabbitMQ
-      - MessageBroker__Host=rabbitmq
-      - MessageBroker__Port=5672
-      - MessageBroker__Username=${RABBITMQ_USER:-admin}
-      - MessageBroker__Password=${RABBITMQ_PASSWORD:-admin123}
-      - MessageBroker__VirtualHost=/
+      # RabbitMQ - Використовуємо змінні з .env
+      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin123}@rabbitmq:${RABBITMQ_PORT:-5672}/
       # JWT Settings
       - JwtSettings__SecretKey=${JWT_SECRET_KEY:-your-super-secret-key-min-32-chars-long}
       - JwtSettings__Issuer=https://jobboard.com
@@ -220,12 +216,8 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=recruitment_db;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true
       # Redis
       - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-redis123},defaultDatabase=1
-      # RabbitMQ
-      - MessageBroker__Host=rabbitmq
-      - MessageBroker__Port=5672
-      - MessageBroker__Username=${RABBITMQ_USER:-admin}
-      - MessageBroker__Password=${RABBITMQ_PASSWORD:-admin123}
-      - MessageBroker__VirtualHost=/
+      # RabbitMQ - Використовуємо змінні з .env
+      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin123}@rabbitmq:${RABBITMQ_PORT:-5672}/
       # Identity Service (для /users/batch)
       - IdentityService__BaseUrl=http://identity-api:8080
       # JWT для валідації токенів
@@ -268,12 +260,8 @@ services:
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
-      # RabbitMQ Consumer
-      - MessageBroker__Host=rabbitmq
-      - MessageBroker__Port=5672
-      - MessageBroker__Username=${RABBITMQ_USER:-admin}
-      - MessageBroker__Password=${RABBITMQ_PASSWORD:-admin123}
-      - MessageBroker__VirtualHost=/
+      # RabbitMQ Consumer - Використовуємо змінні з .env
+      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin123}@rabbitmq:${RABBITMQ_PORT:-5672}/
       # Email SMTP Settings (MailHog для dev, реальний SMTP для prod)
       - EmailSettings__SmtpHost=mailhog
       - EmailSettings__SmtpPort=1025
@@ -317,4 +305,3 @@ networks:
   jobboard-network:
     driver: bridge
     name: jobboard-network
-

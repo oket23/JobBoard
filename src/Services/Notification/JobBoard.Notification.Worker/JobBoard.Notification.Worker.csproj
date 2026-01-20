@@ -15,11 +15,18 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="MassTransit.RabbitMQ" Version="9.0.1-develop.47" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\Shared\JobBoard.Shared\JobBoard.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

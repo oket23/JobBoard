@@ -11,6 +11,7 @@ public class Program
         builder.Services.AddReverseProxy()
             .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
         
+        builder.Services.AddHealthChecks();
         builder.Services.AddJobBoardOpenTelemetry(builder.Configuration, "Gateway");
         
         builder.Services.AddEndpointsApiExplorer();
@@ -28,6 +29,8 @@ public class Program
         // розібратися з авторизацією як її робити і тд
         //app.UseAuthorization();
 
+        app.MapHealthChecks("/health");
+        
         app.MapReverseProxy();
         
         app.Run();

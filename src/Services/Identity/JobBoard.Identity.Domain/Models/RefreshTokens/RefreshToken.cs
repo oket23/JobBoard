@@ -7,7 +7,7 @@ public class RefreshToken : BaseEntity
 {
     public int Id { get; set; }
     public required string Token { get; set; }
-    public required string JwtId { get; set; } // ID пов'язаного Access Token-а (Jti)
+    public required string JwtId { get; set; } 
     
     public DateTime ExpiryDate { get; set; } 
     

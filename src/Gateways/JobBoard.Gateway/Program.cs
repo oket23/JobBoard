@@ -8,14 +8,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
-        builder.Services.AddReverseProxy()
-            .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-        
-        builder.Services.AddHealthChecks();
-        builder.Services.AddJobBoardOpenTelemetry(builder.Configuration, "Gateway");
-        
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddJobBoardGatewayApi(builder.Configuration);
 
         var app = builder.Build();
         
@@ -26,10 +19,12 @@ public class Program
         }
         
         app.UseHttpsRedirection();
-        // розібратися з авторизацією як її робити і тд
-        //app.UseAuthorization();
 
         app.MapHealthChecks("/health");
+        
+        app.UseCors("AllowAll");
+        
+        app.UseRateLimiter();
         
         app.MapReverseProxy();
         

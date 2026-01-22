@@ -6,10 +6,10 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -28,11 +28,11 @@ services:
     image: rabbitmq:3.13-management-alpine
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin123}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"       # AMQP для MassTransit
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672" # Management UI
+      - "${RABBITMQ_PORT}:5672"       # AMQP для MassTransit
+      - "${RABBITMQ_MGMT_PORT}:15672" # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
@@ -66,7 +66,7 @@ services:
     restart: unless-stopped
     command: >
       redis-server
-      --requirepass ${REDIS_PASSWORD:-redis123}
+      --requirepass ${REDIS_PASSWORD}
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
       --appendonly yes
@@ -87,8 +87,8 @@ services:
     image: mailhog/mailhog:latest
     restart: unless-stopped
     ports:
-      - "${MAILHOG_SMTP_PORT:-1025}:1025" # SMTP (для Notification Service)
-      - "${MAILHOG_UI_PORT:-8025}:8025"   # Web UI для перегляду листів
+      - "${MAILHOG_SMTP_PORT}:1025" # SMTP (для Notification Service)
+      - "${MAILHOG_UI_PORT}:8025"   # Web UI для перегляду листів
     networks:
       - jobboard-network
     # MailHog перехоплює листи локально (для dev/testing)
@@ -101,11 +101,11 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
-      SEQ_API_KEY: ${SEQ_API_KEY:-dev-api-key}
-      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD:-adminpassword123!}
+      SEQ_API_KEY: ${SEQ_API_KEY}
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD}
     ports:
-      - "${SEQ_UI_PORT:-5341}:80"       # Web UI
-      - "${SEQ_INGESTION_PORT:-5342}:5341" # Log ingestion
+      - "${SEQ_UI_PORT}:80"       # Web UI
+      - "${SEQ_INGESTION_PORT}:5341" # Log ingestion
     volumes:
       - seq_data:/data
     networks:
@@ -114,18 +114,18 @@ services:
   # --- API Gateway (YARP Reverse Proxy) ---
   gateway:
     container_name: jobboard-gateway
-    image: ${DOCKER_REGISTRY:-}jobboard.gateway:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-}jobboard.gateway:${IMAGE_TAG}
     build:
       context: .
       dockerfile: src/Gateways/JobBoard.Gateway/Dockerfile
       args:
-        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION}
     restart: unless-stopped
     ports:
-      - "${GATEWAY_PORT:-5000}:8080"  # HTTP
-      - "${GATEWAY_HTTPS_PORT:-5001}:8081" # HTTPS (якщо налаштовано)
+      - "${GATEWAY_PORT}:8080"  # HTTP
+      - "${GATEWAY_HTTPS_PORT}:8081" # HTTPS (якщо налаштовано)
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8080
       # YARP Routing (конфігурація в appsettings.json або env)
       - ReverseProxy__Clusters__identityCluster__Destinations__destination1__Address=http://identity-api:8080
@@ -133,7 +133,7 @@ services:
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
-      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY:-dev-api-key}
+      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY}
       # Jaeger
       - Jaeger__Endpoint=http://jaeger:4317
     networks:
@@ -153,32 +153,32 @@ services:
   # --- Identity Service ---
   identity-api:
     container_name: jobboard-identity-api
-    image: ${DOCKER_REGISTRY:-}jobboard.identity.api:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-}jobboard.identity.api:${IMAGE_TAG}
     build:
       context: .
       dockerfile: src/Services/Identity/JobBoard.Identity.Api/Dockerfile
       args:
-        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION}
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8080
       # Database
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=identity_db;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=identity_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Include Error Detail=true
       # Redis
-      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-redis123},defaultDatabase=0
+      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD},defaultDatabase=0
       # RabbitMQ - Використовуємо змінні з .env
-      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin123}@rabbitmq:${RABBITMQ_PORT:-5672}/
+      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:${RABBITMQ_PORT}/
       # JWT Settings
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-your-super-secret-key-min-32-chars-long}
-      - JwtSettings__Issuer=https://jobboard.com
-      - JwtSettings__Audience=https://jobboard.com
-      - JwtSettings__AccessTokenExpirationMinutes=15
-      - JwtSettings__RefreshTokenExpirationDays=7
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_CLIENTS}
+      - JwtSettings__AccessTokenExpirationMinutes=${JWT_ACCESS_EXPIRY_MINUTES}
+      - JwtSettings__RefreshTokenExpirationDays=${JWT_REFRESH_EXPIRY_DAYS}
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
-      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY:-dev-api-key}
+      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY}
       # CORS
       - AllowedOrigins=${CORS_ALLOWED_ORIGINS}
       # Jaeger
@@ -202,32 +202,34 @@ services:
   # --- Recruitment Service ---
   recruitment-api:
     container_name: jobboard-recruitment-api
-    image: ${DOCKER_REGISTRY:-}jobboard.recruitment.api:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-}jobboard.recruitment.api:${IMAGE_TAG}
     build:
       context: .
       dockerfile: src/Services/Recruitment/JobBoard.Recruitment.Api/Dockerfile
       args:
-        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION}
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8080
       # Database (окрема БД на тому ж PostgreSQL)
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=recruitment_db;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=recruitment_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Include Error Detail=true
       # Redis
-      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-redis123},defaultDatabase=1
+      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD},defaultDatabase=1
       # RabbitMQ - Використовуємо змінні з .env
-      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin123}@rabbitmq:${RABBITMQ_PORT:-5672}/
+      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:${RABBITMQ_PORT}/
       # Identity Service (для /users/batch)
       - IdentityService__BaseUrl=http://identity-api:8080
       # JWT для валідації токенів
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-your-super-secret-key-min-32-chars-long}
-      - JwtSettings__Issuer=https://jobboard.com
-      - JwtSettings__Audience=https://jobboard.com
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_CLIENTS}
+      - JwtSettings__AccessTokenExpirationMinutes=${JWT_ACCESS_EXPIRY_MINUTES}
+      - JwtSettings__RefreshTokenExpirationDays=${JWT_REFRESH_EXPIRY_DAYS}
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
-      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY:-dev-api-key}
+      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY}
       # CORS
       - AllowedOrigins=${CORS_ALLOWED_ORIGINS}
       # Jaeger
@@ -251,17 +253,17 @@ services:
   # --- Notification Worker (Background Service) ---
   notification-worker:
     container_name: jobboard-notification-worker
-    image: ${DOCKER_REGISTRY:-}jobboard.notification.worker:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-}jobboard.notification.worker:${IMAGE_TAG}
     build:
       context: .
       dockerfile: src/Services/Notification/JobBoard.Notification.Worker/Dockerfile
       args:
-        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION}
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       # RabbitMQ Consumer - Використовуємо змінні з .env
-      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin123}@rabbitmq:${RABBITMQ_PORT:-5672}/
+      - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:${RABBITMQ_PORT}/
       # Email SMTP Settings (MailHog для dev, реальний SMTP для prod)
       - EmailSettings__SmtpHost=mailhog
       - EmailSettings__SmtpPort=1025
@@ -274,11 +276,11 @@ services:
       # - EmailSettings__Password=${SMTP_PASSWORD}
       # - EmailSettings__EnableSsl=true
       # Redis (для idempotency)
-      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-redis123},defaultDatabase=2
+      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD},defaultDatabase=2
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
-      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY:-dev-api-key}
+      - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY}
       # Jaeger
       - Jaeger__Endpoint=http://jaeger:4317
     networks:

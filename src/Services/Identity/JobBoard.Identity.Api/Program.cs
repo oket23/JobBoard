@@ -25,7 +25,7 @@ public class Program
         
         app.MapControllers();
         
-        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/api/v1/identity/health").AllowAnonymous();
         
         app.Run();
     }

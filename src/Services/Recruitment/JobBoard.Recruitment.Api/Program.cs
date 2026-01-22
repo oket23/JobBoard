@@ -27,13 +27,13 @@ public class Program
             app.UseSwaggerUI();
         }
         
-        app.UseHttpsRedirection();
+        //app.UseHttpsRedirection();
 
         app.UseAuthorization();
         
         app.MapControllers();
         
-        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/api/v1/recruitment/health").AllowAnonymous();
         
         app.Run();
     }

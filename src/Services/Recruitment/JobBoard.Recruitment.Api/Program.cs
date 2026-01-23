@@ -1,4 +1,5 @@
 using JobBoard.Shared.Extensions;
+using JobBoard.Shared.Middlewares;
 
 namespace JobBoard.Recruitment.Api;
 
@@ -20,6 +21,8 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
+        
+        app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
         
         if (app.Environment.IsDevelopment())
         {

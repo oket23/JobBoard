@@ -1,4 +1,4 @@
-using JobBoard.Shared.Extensions;
+using JobBoard.Shared.Middlewares;
 
 namespace JobBoard.Identity.Api;
 
@@ -11,6 +11,8 @@ public class Program
         builder.Services.AddIdentityApi(builder.Configuration);
         
         var app = builder.Build();
+        
+        app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
         
         if (app.Environment.IsDevelopment())
         {

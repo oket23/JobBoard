@@ -10,10 +10,9 @@ using JobBoard.Identity.Domain.Models.Users;
 using JobBoard.Identity.Domain.Requests.Auth;
 using JobBoard.Identity.Domain.Response.Auth;
 using JobBoard.Identity.Domain.Response.Users;
+using JobBoard.Shared.Exceptions;
 using JobBoard.Shared.Hash;
-using MassTransit.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 
 namespace JobBoard.Identity.Application.Services.Auth;
 
@@ -40,12 +39,12 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            throw new ArgumentException($"User with email {request.Email} not found");
+            throw new NotFoundException($"User with email {request.Email} not found");
         }
 
         if (!HasherUtil.VerifyPassword(request.Password, user.PasswordHash))
         {
-            throw new ArgumentException($"User with email {request.Email} does not match password");
+            throw new BadRequestException("Invalid password");
         }
 
         return await UserToAuthResponse(user, cancellationToken);
@@ -56,7 +55,7 @@ public class AuthService : IAuthService
         var existingUser = await _userRepository.GetByEmail(request.Email, cancellationToken);
         if (existingUser != null)
         {
-            throw new ArgumentException($"User with email {request.Email} already exists");
+            throw new ConflictException($"User with email {request.Email} already exists");
         }
         
         var user = new User
@@ -77,27 +76,27 @@ public class AuthService : IAuthService
     public async Task<AuthResponse> RefreshToken(string accessToken, string refreshToken, CancellationToken cancellationToken = default)
     {
         var storedToken = await _refreshTokenRepository.GetByTokenAsync(refreshToken, cancellationToken);
-
+        
         if (storedToken == null)
         {
-            throw new SecurityTokenException("Invalid refresh token");
+            throw new UnauthorizedException("Invalid refresh token");
         }
 
         if (storedToken.Invalidated)
         {
-            throw new SecurityTokenException("Token is invalidated");
+            throw new UnauthorizedException("Token is invalidated");
         }
 
         if (storedToken.ExpiryDate < DateTime.UtcNow)
         {
-            throw new SecurityTokenException("Token expired");
+            throw new UnauthorizedException("Token expired");
         }
         
         if (storedToken.Used)
         {
             storedToken.Invalidated = true;
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            throw new SecurityTokenException("Token already used. Security alert!");
+            throw new UnauthorizedException("Token already used. Security alert!");
         }
 
         try
@@ -108,12 +107,12 @@ public class AuthService : IAuthService
 
             if (storedToken.JwtId != jti)
             {
-                throw new SecurityTokenException("Token mismatch");
+                throw new UnauthorizedException("Token mismatch");
             }
         }
         catch (Exception)
         {
-            throw new SecurityTokenException("Invalid access token format");
+            throw new UnauthorizedException("Invalid access token format");
         }
 
         storedToken.Used = true;
@@ -121,7 +120,7 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetById(storedToken.UserId, cancellationToken);
         if (user == null)
         {
-            throw new Exception("User not found");
+            throw new NotFoundException("User not found");
         }
 
         return await UserToAuthResponse(user, cancellationToken);
@@ -129,10 +128,10 @@ public class AuthService : IAuthService
 
     public async Task<UserResponse> GetUserProfile(int userId, CancellationToken cancellationToken = default)
     {
-        var  user = await _userRepository.GetById(userId, cancellationToken);
+        var user = await _userRepository.GetById(userId, cancellationToken);
         if (user == null)
         {
-            throw new ArgumentException($"User with id {userId} not found");
+            throw new NotFoundException($"User with id {userId} not found");
         }
         return user.ToResponse();
     }

@@ -8,6 +8,5 @@ public class UpdateUserRequest
     public required string FirstName { get; set; } 
     public required string LastName { get; set; }
     public DateTime DateOfBirth { get; set; }  
-    public UserRole Role { get; set; } 
     public UserGender Gender { get; set; } 
 }

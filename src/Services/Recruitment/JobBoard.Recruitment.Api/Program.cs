@@ -1,5 +1,6 @@
 using JobBoard.Shared.Extensions;
 using JobBoard.Shared.Middlewares;
+using Serilog;
 
 namespace JobBoard.Recruitment.Api;
 
@@ -8,6 +9,8 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        builder.AddSerilogLogging();
         
         builder.Services.AddHealthChecks()
             .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "postgres_check", tags: new[] { "db" })
@@ -21,6 +24,8 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
+        
+        app.UseSerilogRequestLogging();
         
         app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
         

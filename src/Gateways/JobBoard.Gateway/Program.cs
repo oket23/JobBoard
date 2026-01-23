@@ -1,4 +1,5 @@
 using JobBoard.Shared.Extensions;
+using Serilog;
 
 namespace JobBoard.Gateway;
 
@@ -8,9 +9,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
+        builder.AddSerilogLogging();
         builder.Services.AddJobBoardGatewayApi(builder.Configuration);
-
+        
         var app = builder.Build();
+        
+        app.UseSerilogRequestLogging();
         
         if (app.Environment.IsDevelopment())
         {
@@ -18,8 +22,6 @@ public class Program
             app.UseSwaggerUI();
         }
         
-        //app.UseHttpsRedirection();
-
         app.MapHealthChecks("/health");
         
         app.UseCors("AllowAll");

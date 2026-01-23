@@ -1,4 +1,6 @@
+using JobBoard.Shared.Extensions;
 using JobBoard.Shared.Middlewares;
+using Serilog;
 
 namespace JobBoard.Identity.Api;
 
@@ -8,9 +10,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
+        builder.AddSerilogLogging();
         builder.Services.AddIdentityApi(builder.Configuration);
         
         var app = builder.Build();
+        
+        app.UseSerilogRequestLogging();
         
         app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
         
@@ -20,8 +25,6 @@ public class Program
             app.UseSwaggerUI();
         }
         
-        app.UseHttpsRedirection();
-
         app.UseAuthentication();
         app.UseAuthorization();
         

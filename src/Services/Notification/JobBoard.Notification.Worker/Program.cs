@@ -1,7 +1,8 @@
 ﻿using JobBoard.Shared.Extensions;
 using MassTransit;
-using Microsoft.Extensions.Configuration; 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Serilog; 
 
 namespace JobBoard.Notification.Worker;
 
@@ -11,30 +12,41 @@ class Program
     {
         var builder = Host.CreateApplicationBuilder(args);
         
+        builder.AddSerilogLogging();
+        
         var rabbitConnectionString = builder.Configuration.GetConnectionString("RabbitMQ");
         
         builder.Services.AddMassTransit(x =>
         {
             x.UsingRabbitMq((context, cfg) =>
             {
-                // Вказуємо хост через рядок підключення
                 cfg.Host(rabbitConnectionString);
-
-                // Тут пізніше ти будеш реєструвати Consumer-ів (обробників подій)
-                // Наприклад:
-                // cfg.ReceiveEndpoint("notification-queue", e => 
-                // {
-                //     e.ConfigureConsumer<NotificationConsumer>(context);
-                // });
+                
+                // MassTransit автоматично пише логи в Serilog/Seq, 
+                // тобі не треба налаштовувати RequestLogging.
+                cfg.ConfigureEndpoints(context);
             });
         });
 
+        // OpenTelemetry теж можна залишити, якщо там немає Web-специфічних речей
         builder.Services.AddJobBoardOpenTelemetry(builder.Configuration, "Notification");
 
         var host = builder.Build();
         
+
         Console.WriteLine($"Notification Worker connecting to RabbitMQ at: {rabbitConnectionString}");
         
-        await host.RunAsync();
+        try 
+        {
+            await host.RunAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Worker crashed!");
+        }
+        finally
+        {
+            await Log.CloseAndFlushAsync();
+        }
     }
 }

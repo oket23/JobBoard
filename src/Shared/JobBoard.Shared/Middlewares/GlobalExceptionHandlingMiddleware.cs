@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
-using JobBoard.Shared.ApiResponse; // Твій namespace
+using JobBoard.Shared.ApiResponse;
 using JobBoard.Shared.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -33,37 +33,46 @@ public class GlobalExceptionHandlingMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-        
+
         int statusCode;
-        string messageTitle; 
+        string messageTitle;
         string errorDetail = exception.Message;
 
         switch (exception)
         {
             case NotFoundException:
+                _logger.LogWarning("Resource Not Found: {Message}", exception.Message);
+                
                 statusCode = (int)HttpStatusCode.NotFound;
                 messageTitle = "Resource Not Found";
                 break;
             
             case BadRequestException:
             case ArgumentException: 
+                _logger.LogWarning("Bad Request: {Message}", exception.Message);
+
                 statusCode = (int)HttpStatusCode.BadRequest;
                 messageTitle = "Bad Request";
                 break;
 
             case ConflictException:
+                _logger.LogWarning("Conflict detected: {Message}", exception.Message);
+
                 statusCode = (int)HttpStatusCode.Conflict;
                 messageTitle = "Conflict";
                 break;
 
             case UnauthorizedException:
             case Microsoft.IdentityModel.Tokens.SecurityTokenException:
+                _logger.LogWarning("Unauthorized access attempt: {Message}", exception.Message);
+
                 statusCode = (int)HttpStatusCode.Unauthorized;
                 messageTitle = "Unauthorized";
                 break;
 
             default:
                 _logger.LogError(exception, "Unhandled exception occurred.");
+                
                 statusCode = (int)HttpStatusCode.InternalServerError;
                 messageTitle = "Internal Server Error";
                 errorDetail = "An unexpected error occurred. Please try again later.";

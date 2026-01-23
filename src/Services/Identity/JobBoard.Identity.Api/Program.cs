@@ -1,3 +1,4 @@
+using JobBoard.Identity.Api.Endpoints;
 using JobBoard.Shared.Extensions;
 using JobBoard.Shared.Middlewares;
 using Serilog;
@@ -28,6 +29,7 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
         
+        app.UseAuthEndpoints();
         app.MapControllers();
         
         app.MapHealthChecks("/api/v1/identity/health").AllowAnonymous();

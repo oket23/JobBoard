@@ -9,7 +9,6 @@ using JobBoard.Identity.Domain.Models.RefreshTokens;
 using JobBoard.Identity.Domain.Models.Users;
 using JobBoard.Identity.Domain.Requests.Auth;
 using JobBoard.Identity.Domain.Response.Auth;
-using JobBoard.Identity.Domain.Response.Users;
 using JobBoard.Shared.Exceptions;
 using JobBoard.Shared.Hash;
 using Microsoft.Extensions.Options;
@@ -73,9 +72,9 @@ public class AuthService : IAuthService
         return await UserToAuthResponse(user, cancellationToken);
     }
 
-    public async Task<AuthResponse> RefreshToken(string accessToken, string refreshToken, CancellationToken cancellationToken = default)
+    public async Task<AuthResponse> RefreshToken(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
-        var storedToken = await _refreshTokenRepository.GetByTokenAsync(refreshToken, cancellationToken);
+        var storedToken = await _refreshTokenRepository.GetByTokenAsync(request.RefreshToken, cancellationToken);
         
         if (storedToken == null)
         {
@@ -102,7 +101,7 @@ public class AuthService : IAuthService
         try
         {
             var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(accessToken);
+            var jwtToken = handler.ReadJwtToken(request.AccessToken);
             var jti = jwtToken.Id;
 
             if (storedToken.JwtId != jti)
@@ -126,14 +125,15 @@ public class AuthService : IAuthService
         return await UserToAuthResponse(user, cancellationToken);
     }
 
-    public async Task<UserResponse> GetUserProfile(int userId, CancellationToken cancellationToken = default)
+    public async Task<AuthResponse> GetUserProfile(int userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetById(userId, cancellationToken);
         if (user == null)
         {
             throw new NotFoundException($"User with id {userId} not found");
         }
-        return user.ToResponse();
+        
+        return await UserToAuthResponse(user, cancellationToken);
     }
     
     private async Task<AuthResponse> UserToAuthResponse(User user, CancellationToken cancellationToken)

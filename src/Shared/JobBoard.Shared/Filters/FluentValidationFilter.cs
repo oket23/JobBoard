@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using JobBoard.Shared.ApiResponse;
-using Microsoft.Extensions.Logging; // Додай цей using
+using Microsoft.Extensions.Logging;
 
 namespace JobBoard.Shared.Filters;
 

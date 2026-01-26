@@ -18,6 +18,7 @@ public static class UserMapper
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
+            DateOfBirth = user.DateOfBirth,
             Role = user.Role
         };
     }

@@ -44,6 +44,44 @@ public class UserService : IUserService
         return user.ToResponse();
     }
 
+    public async Task<ResponseList<UsersBatchResponse>> GetUsersBatch(GetUsersBatchRequest request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Fetching users batch. Count of IDs: {IdCount}, Offset: {Offset}, Limit: {Limit}", 
+            request.Ids?.Count() ?? 0, request.Offset, request.Limit);
+        
+        if (request.Ids == null || !request.Ids.Any())
+        {
+            _logger.LogDebug("Batch request IDs list is empty.");
+            return new ResponseList<UsersBatchResponse>
+            {
+                Items = new List<UsersBatchResponse>(),
+                TotalCount = 0,
+                Limit = request.Limit,
+                Offset = request.Offset,
+                Page = 1
+            };
+        }
+        
+        var pagedUsers = await _userRepository.GetUsersByIds(request, cancellationToken);
+        
+        return new ResponseList<UsersBatchResponse>
+        {
+            Items = pagedUsers.Items.Select(u => new UsersBatchResponse
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                DateOfBirth = u.DateOfBirth,
+                Gender = u.Gender
+            }).ToList(),
+            TotalCount = pagedUsers.TotalCount,
+            Limit = pagedUsers.Limit,
+            Offset = pagedUsers.Offset,
+            Page = pagedUsers.Page
+        };
+    }
+
     public async Task Update(int id, UpdateUserRequest request, CancellationToken cancellationToken) 
     {
         _logger.LogInformation("Updating user with id: {Id}", id);
@@ -55,12 +93,12 @@ public class UserService : IUserService
             throw new KeyNotFoundException($"User with id {id} not found");
         };
         
-        user.DateOfBirth = request.DateOfBirth;
-        user.Gender = request.Gender;
-        user.FirstName = request.FirstName;
-        user.LastName = request.LastName;
-        user.Email = request.Email;
-        user.DateOfBirth = request.DateOfBirth;
+        user.DateOfBirth = request.DateOfBirth ?? user.DateOfBirth;
+        user.Gender = request.Gender ?? user.Gender;
+        user.FirstName = request.FirstName ?? user.FirstName;
+        user.LastName = request.LastName ?? user.LastName;
+        //user.Email = request.Email ?? user.Email;
+        user.DateOfBirth = request.DateOfBirth ?? user.DateOfBirth;
     
         _userRepository.Update(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -10,6 +10,7 @@ public interface IUserService
 {
     Task<ResponseList<User>> GetAll(UserRequest request, CancellationToken cancellationToken);
     Task<UserResponse> GetById(int id, CancellationToken cancellationToken);
+    Task<ResponseList<UsersBatchResponse>> GetUsersBatch(GetUsersBatchRequest request, CancellationToken cancellationToken);
     Task Update(int id, UpdateUserRequest request, CancellationToken cancellationToken);
     Task Delete(int id, CancellationToken cancellationToken);
 }

@@ -11,6 +11,7 @@ public interface IUserRepository
     void Delete(User user);
     Task<ResponseList<User>> GetAll(UserRequest request, CancellationToken cancellationToken);
     ValueTask<User?> GetById(int id, CancellationToken cancellationToken);
+    Task<ResponseList<User>> GetUsersByIds(GetUsersBatchRequest request, CancellationToken cancellationToken);
     Task<User?> GetByEmail(string email, CancellationToken cancellationToken);
     Task<bool> IsEmailExist(string email, CancellationToken cancellationToken);
 }

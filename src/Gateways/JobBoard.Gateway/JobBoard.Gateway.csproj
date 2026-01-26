@@ -22,4 +22,8 @@
       <ProjectReference Include="..\..\Shared\JobBoard.Shared\JobBoard.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Controllers\" />
+    </ItemGroup>
+
 </Project>

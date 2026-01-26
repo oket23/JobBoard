@@ -15,6 +15,5 @@ public class RefreshToken : BaseEntity
     public bool Invalidated { get; set; } = false; 
     
     public int UserId { get; set; }
-    //[ForeignKey(nameof(UserId))] винести це в конфіг
     public User User { get; set; } = null!;
 }

@@ -64,10 +64,12 @@ public class AuthService : IAuthService
             LastName = request.LastName,
             PasswordHash = HasherUtil.HashPassword(request.Password),
             Role = UserRole.User,
+            DateOfBirth = request.DateOfBirth,
             CreatedAt = DateTime.UtcNow
         };
         
         _userRepository.Add(user);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         
         return await UserToAuthResponse(user, cancellationToken);
     }
@@ -125,15 +127,23 @@ public class AuthService : IAuthService
         return await UserToAuthResponse(user, cancellationToken);
     }
 
-    public async Task<AuthResponse> GetUserProfile(int userId, CancellationToken cancellationToken = default)
+    public async Task<UserProfileResponse> GetUserProfile(int userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetById(userId, cancellationToken);
         if (user == null)
         {
             throw new NotFoundException($"User with id {userId} not found");
         }
-        
-        return await UserToAuthResponse(user, cancellationToken);
+
+        return new UserProfileResponse
+        {
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            DateOfBirth = user.DateOfBirth,
+            Role = user.Role,
+            Gender = user.Gender
+        };
     }
     
     private async Task<AuthResponse> UserToAuthResponse(User user, CancellationToken cancellationToken)
@@ -144,6 +154,7 @@ public class AuthService : IAuthService
         var handler = new JwtSecurityTokenHandler();
         var tokenObj = handler.ReadJwtToken(accessToken);
         var jti = tokenObj.Id;
+        var expiry = tokenObj.ValidTo;
         
         var refreshTokenEntity = new RefreshToken
         {
@@ -163,6 +174,7 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenString,
+            AccessTokenExpiry = expiry,
             User = user.ToResponse()
         };
     }

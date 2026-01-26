@@ -1,4 +1,5 @@
 using JobBoard.Shared.Extensions;
+using JobBoard.Shared.Middlewares;
 using Serilog;
 
 namespace JobBoard.Gateway;
@@ -15,6 +16,8 @@ public class Program
         var app = builder.Build();
         
         app.UseSerilogRequestLogging();
+        
+        //app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
         
         if (app.Environment.IsDevelopment())
         {

@@ -75,6 +75,28 @@ public class UserRepository : RepositoryBase<User>, IUserRepository
     }
 
 
+    public async Task<ResponseList<User>> GetUsersByIds(GetUsersBatchRequest request, CancellationToken cancellationToken)
+    {
+        var query = Set<User>().AsQueryable()
+            .Where(u => request.Ids.Contains(u.Id));
+        
+        var count = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .Skip(request.Offset)
+            .Take(request.Limit)
+            .ToListAsync(cancellationToken);
+    
+        return new ResponseList<User>
+        {
+            Items = items,
+            TotalCount = count,
+            Limit = request.Limit,
+            Offset = request.Offset,
+            Page = request.Limit > 0 ? (request.Offset / request.Limit) + 1 : 1
+        };
+    }
+
     public Task<User?> GetByEmail(string email, CancellationToken cancellationToken)
     {
         return Set<User>().FirstOrDefaultAsync(u => u.Email.Equals(email), cancellationToken);

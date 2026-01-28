@@ -8,6 +8,7 @@ using JobBoard.Identity.Domain.DTOs;
 using JobBoard.Identity.Infrastructure;
 using JobBoard.Shared.Extensions;
 using JobBoard.Shared.Filters;
+using MassTransit;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 
@@ -63,6 +64,14 @@ public static class DependencyInjection
         services.Configure<JsonOptions>(options =>
         {
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
+        
+        services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host(configuration.GetConnectionString("RabbitMQ"));
+            });
         });
         
         services.AddSwaggerGen();

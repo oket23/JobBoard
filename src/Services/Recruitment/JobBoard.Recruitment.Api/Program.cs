@@ -1,12 +1,14 @@
+using JobBoard.Recruitment.Infrastructure;
 using JobBoard.Shared.Extensions;
 using JobBoard.Shared.Middlewares;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace JobBoard.Recruitment.Api;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         
@@ -32,6 +34,18 @@ public class Program
         app.MapControllers();
         
         app.MapHealthChecks("/api/v1/recruitment/health").AllowAnonymous();
+        
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<JobBoardRecruitmentContext>().Database;
+
+            foreach (var migration in db.GetPendingMigrations())
+            {
+                Console.WriteLine($"Applying {migration}...");
+            }
+    
+            await db.MigrateAsync();
+        }
         
         app.Run();
     }

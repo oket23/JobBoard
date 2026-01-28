@@ -1,5 +1,6 @@
 ﻿using System.Threading.RateLimiting;
 using JobBoard.Shared.Extensions;
+using Polly;
 
 namespace JobBoard.Gateway;
 
@@ -48,6 +49,17 @@ public static class DependencyInjection
                     });
             });
         });
+        
+        services.AddResiliencePipeline("default", builder =>
+        {
+            builder.AddRetry(new Polly.Retry.RetryStrategyOptions
+            {
+                MaxRetryAttempts = 3,                     
+                Delay = TimeSpan.FromMilliseconds(500),    
+                BackoffType = DelayBackoffType.Exponential 
+            });
+        });
+        
         return services;
     }
 }

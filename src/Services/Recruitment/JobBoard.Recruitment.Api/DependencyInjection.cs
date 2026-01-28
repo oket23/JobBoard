@@ -1,4 +1,6 @@
-﻿using JobBoard.Shared.Extensions;
+﻿using JobBoard.Recruitment.Infrastructure;
+using JobBoard.Shared.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobBoard.Recruitment.Api;
 
@@ -6,6 +8,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddRecruitmentApi(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddDbContext<JobBoardRecruitmentContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        
         services.AddHealthChecks()
             .AddNpgSql(configuration.GetConnectionString("DefaultConnection")!, name: "postgres_check",
                 tags: new[] { "db" })

@@ -1,5 +1,4 @@
 ﻿using JobBoard.Identity.Domain.Models.RefreshTokens;
-using JobBoard.Identity.Domain.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

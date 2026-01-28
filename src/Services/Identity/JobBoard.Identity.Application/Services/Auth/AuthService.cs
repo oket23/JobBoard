@@ -9,8 +9,10 @@ using JobBoard.Identity.Domain.Models.RefreshTokens;
 using JobBoard.Identity.Domain.Models.Users;
 using JobBoard.Identity.Domain.Requests.Auth;
 using JobBoard.Identity.Domain.Response.Auth;
+using JobBoard.Shared.Events.User;
 using JobBoard.Shared.Exceptions;
 using JobBoard.Shared.Hash;
+using MassTransit;
 using Microsoft.Extensions.Options;
 
 namespace JobBoard.Identity.Application.Services.Auth;
@@ -20,15 +22,17 @@ public class AuthService : IAuthService
     private readonly IJwtGenerator _generator;
     private readonly JwtSettings _jwtSettings;
     private readonly IUserRepository _userRepository;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public AuthService(IJwtGenerator generator, IUserRepository userRepository, IUnitOfWork unitOfWork, IRefreshTokenRepository refreshTokenRepository, IOptions<JwtSettings> jwtOptions)
+    public AuthService(IJwtGenerator generator, IUserRepository userRepository, IUnitOfWork unitOfWork, IRefreshTokenRepository refreshTokenRepository, IOptions<JwtSettings> jwtOptions, IPublishEndpoint publishEndpoint)
     {
         _generator = generator;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _refreshTokenRepository = refreshTokenRepository;
+        _publishEndpoint = publishEndpoint;
         _jwtSettings = jwtOptions.Value;
     }
 
@@ -63,6 +67,7 @@ public class AuthService : IAuthService
             FirstName = request.FirstName,
             LastName = request.LastName,
             PasswordHash = HasherUtil.HashPassword(request.Password),
+            Gender = request.Gender,
             Role = UserRole.User,
             DateOfBirth = request.DateOfBirth,
             CreatedAt = DateTime.UtcNow
@@ -70,6 +75,8 @@ public class AuthService : IAuthService
         
         _userRepository.Add(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        await _publishEndpoint.Publish(new UserRegisteredEvent(user.Id, user.Email, user.FirstName), cancellationToken);
         
         return await UserToAuthResponse(user, cancellationToken);
     }

@@ -173,8 +173,8 @@ services:
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER}
       - JwtSettings__Audience=${JWT_CLIENTS}
-      - JwtSettings__AccessTokenExpirationMinutes=${JWT_ACCESS_EXPIRY_MINUTES}
-      - JwtSettings__RefreshTokenExpirationDays=${JWT_REFRESH_EXPIRY_DAYS}
+      - JwtSettings__AccessExpiryMinutes=${JWT_ACCESS_EXPIRY_MINUTES}
+      - JwtSettings__RefreshExpiryDays=${JWT_REFRESH_EXPIRY_DAYS}
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
@@ -224,8 +224,8 @@ services:
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER}
       - JwtSettings__Audience=${JWT_CLIENTS}
-      - JwtSettings__AccessTokenExpirationMinutes=${JWT_ACCESS_EXPIRY_MINUTES}
-      - JwtSettings__RefreshTokenExpirationDays=${JWT_REFRESH_EXPIRY_DAYS}
+      - JwtSettings__AccessExpiryMinutes=${JWT_ACCESS_EXPIRY_MINUTES}
+      - JwtSettings__RefreshExpiryDays=${JWT_REFRESH_EXPIRY_DAYS}
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
@@ -265,16 +265,18 @@ services:
       # RabbitMQ Consumer - Використовуємо змінні з .env
       - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:${RABBITMQ_PORT}/
       # Email SMTP Settings (MailHog для dev, реальний SMTP для prod)
-      - EmailSettings__SmtpHost=mailhog
-      - EmailSettings__SmtpPort=1025
-      - EmailSettings__FromEmail=noreply@jobboard.com
-      - EmailSettings__FromName=JobBoard Recruitment
+      # - EmailSettings__SmtpHost=mailhog
+      # - EmailSettings__SmtpPort=1025
+      # - EmailSettings__FromEmail=noreply@jobboard.com
+      # - EmailSettings__FromName=JobBoard Recruitment
       # Для Production (Gmail/SendGrid/AWS SES):
-      # - EmailSettings__SmtpHost=smtp.gmail.com
-      # - EmailSettings__SmtpPort=587
-      # - EmailSettings__Username=${SMTP_USERNAME}
-      # - EmailSettings__Password=${SMTP_PASSWORD}
-      # - EmailSettings__EnableSsl=true
+      - EmailSettings__SmtpHost=smtp.gmail.com
+      - EmailSettings__SmtpPort=587
+      - EmailSettings__Username=${SMTP_USERNAME}
+      - EmailSettings__Password=${SMTP_PASSWORD}
+      - EmailSettings__EnableSsl=true
+      - EmailSettings__FromEmail=${SMTP_USERNAME}
+      - EmailSettings__FromName=JobBoard Team
       # Redis (для idempotency)
       - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD},defaultDatabase=2
       # Logging
@@ -283,6 +285,7 @@ services:
       - Serilog__WriteTo__0__Args__apiKey=${SEQ_API_KEY}
       # Jaeger
       - Jaeger__Endpoint=http://jaeger:4317
+        
     networks:
       - jobboard-network
     depends_on:

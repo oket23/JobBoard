@@ -10,6 +10,7 @@ public class RegisterUserRequestValidator : AbstractValidator<RegisterUserReques
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required")
             .EmailAddress().WithMessage("Invalid email format")
+            .Matches(@"^[^@\s,]+@[^@\s,]+\.[^@\s,]+$").WithMessage("Email contains invalid characters (like commas)")
             .MaximumLength(100);
 
         RuleFor(x => x.Password)

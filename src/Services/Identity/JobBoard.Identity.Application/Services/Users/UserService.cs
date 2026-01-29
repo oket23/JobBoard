@@ -2,7 +2,6 @@
 using JobBoard.Identity.Domain.Abstractions;
 using JobBoard.Identity.Domain.Abstractions.Repositories;
 using JobBoard.Identity.Domain.Abstractions.Services;
-using JobBoard.Identity.Domain.Models.Users;
 using JobBoard.Identity.Domain.Requests.Users;
 using JobBoard.Identity.Domain.Response;
 using JobBoard.Identity.Domain.Response.Users;
@@ -23,11 +22,13 @@ public class UserService : IUserService
         _logger = logger;
     }
     
-    public async Task<ResponseList<User>> GetAll(UserRequest request, CancellationToken cancellationToken)
+    public async Task<ResponseList<UserResponse>> GetAll(UserRequest request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Fetching users with filter. Offset: {Offset}, Limit: {Limit}", request.Offset, request.Limit);
         
-        return await _userRepository.GetAll(request, cancellationToken);
+        var users = await _userRepository.GetAll(request, cancellationToken);
+        
+        return users.ToResponseList(x => x.ToResponse());
     }
 
     public async Task<UserResponse> GetById(int id, CancellationToken cancellationToken)

@@ -40,10 +40,10 @@ public static class DependencyInjection
         
         services.AddHealthChecks()
             .AddNpgSql(configuration.GetConnectionString("DefaultConnection")!, name: "postgres_check", tags: new[] { "db" })
-            .AddRedis(configuration.GetConnectionString("Redis")!, name: "redis_check", tags: new[] { "cache" })
             .AddRabbitMQ(configuration.GetConnectionString("RabbitMQ")!, name: "rabbitmq_check", tags: new[] { "broker" });
         
         services.AddJobBoardOpenTelemetry(configuration, "Identity-Service");
+        
         services.AddEndpointsApiExplorer();
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<RegisterUserRequestValidator>();
@@ -60,11 +60,6 @@ public static class DependencyInjection
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-        
-        services.Configure<JsonOptions>(options =>
-        {
-            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        });
         
         services.AddMassTransit(x =>
         {

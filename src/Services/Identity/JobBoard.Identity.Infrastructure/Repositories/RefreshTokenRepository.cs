@@ -13,7 +13,7 @@ public class RefreshTokenRepository : RepositoryBase<RefreshToken>, IRefreshToke
 
     public Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
     {
-        return  Set<RefreshToken>().Include(x => x.User) 
+        return Set<RefreshToken>().Include(x => x.User) 
             .FirstOrDefaultAsync(x => x.Token == token, cancellationToken);
     }
 }

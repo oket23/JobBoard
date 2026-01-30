@@ -8,5 +8,5 @@ public interface IApplicationsService
 {
     Task ChangeStatus(int id, ChangeApplicationStatusRequest request, CancellationToken cancellationToken);
     Task<ResponseList<UserApplicationResponse>> GetUserApplications(int userId, UserApplicationRequest request, CancellationToken cancellationToken);
-    Task Create(int jobId, int userId, CreateApplicationRequest request, CancellationToken cancellationToken);
+    Task Create(CreateApplicationRequest request, CancellationToken cancellationToken);
 }

@@ -4,6 +4,6 @@ namespace JobBoard.Identity.Domain.Abstractions;
 
 public interface IJwtGenerator
 {
-    string GenerateAccessToken(int userId, string email, UserRole role);
+    string GenerateAccessToken(int userId, string email,string userName, UserRole role);
     string GenerateRefreshToken();
 }

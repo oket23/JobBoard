@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using JobBoard.Recruitment.Application.Services.Jobs;
 using JobBoard.Recruitment.Application.Validators.Applications;
 using JobBoard.Recruitment.Domain.Abstractions;
 using JobBoard.Recruitment.Infrastructure;
@@ -8,7 +9,6 @@ using JobBoard.Shared.Caching;
 using JobBoard.Shared.Extensions;
 using JobBoard.Shared.Filters;
 using MassTransit;
-using MassTransit.JobService;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -32,7 +32,7 @@ public static class DependencyInjection
             .FromAssemblies(
                 typeof(IUnitOfWork).Assembly,          
                 typeof(JobBoardRecruitmentContext).Assembly, 
-                typeof(JobService).Assembly           
+                typeof(JobsService).Assembly           
             )
             .AddClasses(classes => classes.Where(type => 
                 type.Name.EndsWith("Service") || 

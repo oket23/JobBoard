@@ -13,6 +13,7 @@ using JobBoard.Shared.Events.User;
 using JobBoard.Shared.Exceptions;
 using JobBoard.Shared.Hash;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace JobBoard.Identity.Application.Services.Auth;
@@ -20,19 +21,21 @@ namespace JobBoard.Identity.Application.Services.Auth;
 public class AuthService : IAuthService
 {
     private readonly IJwtGenerator _generator;
+    private readonly ILogger<AuthService> _logger;
     private readonly JwtSettings _jwtSettings;
     private readonly IUserRepository _userRepository;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public AuthService(IJwtGenerator generator, IUserRepository userRepository, IUnitOfWork unitOfWork, IRefreshTokenRepository refreshTokenRepository, IOptions<JwtSettings> jwtOptions, IPublishEndpoint publishEndpoint)
+    public AuthService(IJwtGenerator generator, IUserRepository userRepository, IUnitOfWork unitOfWork, IRefreshTokenRepository refreshTokenRepository, IOptions<JwtSettings> jwtOptions, IPublishEndpoint publishEndpoint, ILogger<AuthService> logger)
     {
         _generator = generator;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _refreshTokenRepository = refreshTokenRepository;
         _publishEndpoint = publishEndpoint;
+        _logger = logger;
         _jwtSettings = jwtOptions.Value;
     }
 
@@ -49,7 +52,11 @@ public class AuthService : IAuthService
         {
             throw new BadRequestException("Invalid password");
         }
-
+        
+        _logger.LogInformation("User {UserId} logged in successfully", user.Id);
+        
+        await _publishEndpoint.Publish(new UserLoginEvent(user.Id, user.Email, user.FirstName, DateTime.UtcNow), cancellationToken);
+        
         return await UserToAuthResponse(user, cancellationToken);
     }
     
@@ -155,7 +162,7 @@ public class AuthService : IAuthService
     
     private async Task<AuthResponse> UserToAuthResponse(User user, CancellationToken cancellationToken)
     {
-        var accessToken = _generator.GenerateAccessToken(user.Id, user.Email, user.Role);
+        var accessToken = _generator.GenerateAccessToken(user.Id, user.Email,user.FirstName, user.Role);
         var refreshTokenString = _generator.GenerateRefreshToken();
         
         var handler = new JwtSecurityTokenHandler();

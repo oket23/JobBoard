@@ -25,7 +25,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
         await _userService.Delete(id, cancellationToken);
-        return Ok("User successfully deleted");
+        return Ok(new ApiSuccessResponse("User successfully deleted"));
     }
     
     [Authorize(Roles =  "Admin")]
@@ -33,8 +33,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Update([FromRoute] int id,[FromBody] UpdateUserRequest request, CancellationToken cancellationToken)
     {
         await _userService.Update(id,request, cancellationToken);
-        
-        return Ok("User successfully updated");
+        return Ok(new ApiSuccessResponse("User successfully updated"));
     }
     
     [HttpGet("batch")]

@@ -9,4 +9,5 @@ public interface IJobsServices
     Task<ResponseList<JobResponse>> GetAll(JobRequest request, CancellationToken cancellationToken);
     Task Create(CreateJobRequest request, CancellationToken cancellationToken);
     Task Delete(int id, CancellationToken cancellationToken);
+    Task Update(int id, UpdateJobRequest request, CancellationToken cancellationToken);
 }

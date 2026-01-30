@@ -20,7 +20,7 @@ public class JwtGenerator : IJwtGenerator
         _jwtSettings = jwtOptions.Value;
     }
 
-    public string GenerateAccessToken(int userId,string email, UserRole role)
+    public string GenerateAccessToken(int userId,string email, string userName,UserRole role)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -30,6 +30,7 @@ public class JwtGenerator : IJwtGenerator
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.GivenName, userName),
             new Claim(ClaimTypes.Role, role.ToString()) 
         };
         

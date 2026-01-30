@@ -10,13 +10,16 @@ public static class DependencyInjection
     {
         services.AddLogging();
         
+        var allowedOrigins = configuration["AllowedOrigins"]?.Split(',') ?? Array.Empty<string>();
+        
         services.AddCors(options =>
         {
             options.AddPolicy("AllowAll", policy =>
             {
-                policy.AllowAnyOrigin() 
+                policy.WithOrigins(allowedOrigins) 
                     .AllowAnyMethod()
-                    .AllowAnyHeader();
+                    .AllowAnyHeader()
+                    .AllowCredentials();
             });
         });
         

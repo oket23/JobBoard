@@ -10,6 +10,8 @@ public class UserApplication : BaseEntity
     public int JobPostId { get; set; }
     public JobPost? JobPost { get; set; }
     public int UserId { get; set; }
+    public required string UserEmail { get; set; }
+    public required string UserFirstName { get; set; }
     public required string CoverLetter { get; set; }
     public ApplicationStatusEnum Status { get; set; } = ApplicationStatusEnum.Pending;
 }

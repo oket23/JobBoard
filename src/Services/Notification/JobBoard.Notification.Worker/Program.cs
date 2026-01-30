@@ -20,11 +20,14 @@ class Program
         
         var rabbitConnectionString = builder.Configuration.GetConnectionString("RabbitMQ");
         
-        builder.Services.AddScoped<IEmailService, FakeEmailService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
         
         builder.Services.AddMassTransit(x =>
         {
             x.AddConsumer<UserRegisteredConsumer>();
+            x.AddConsumer<UserLoggedInConsumer>();           
+            x.AddConsumer<ApplicationCreatedConsumer>();  
+            x.AddConsumer<ApplicationStatusChangedConsumer>(); 
 
             x.UsingRabbitMq((context, cfg) =>
             {

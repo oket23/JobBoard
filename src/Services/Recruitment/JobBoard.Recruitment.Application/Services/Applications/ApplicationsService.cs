@@ -7,7 +7,9 @@ using JobBoard.Recruitment.Domain.Requests.Applications;
 using JobBoard.Recruitment.Domain.Response;
 using JobBoard.Recruitment.Domain.Response.Applications;
 using JobBoard.Shared.Caching;
+using JobBoard.Shared.Events.Applications;
 using JobBoard.Shared.Exceptions;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace JobBoard.Recruitment.Application.Services.Applications;
@@ -19,6 +21,7 @@ public class ApplicationsService : IApplicationsService
     private readonly ILogger<ApplicationsService> _logger;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cache;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     private const string UserAppsPrefix = "apps:user";
 
@@ -27,13 +30,14 @@ public class ApplicationsService : IApplicationsService
         IJobsRepository jobsRepository,
         ILogger<ApplicationsService> logger,
         IUnitOfWork unitOfWork,
-        ICacheService cache)
+        ICacheService cache, IPublishEndpoint publishEndpoint)
     {
         _applicationRepository = applicationRepository;
         _jobsRepository = jobsRepository;
         _logger = logger;
         _unitOfWork = unitOfWork;
         _cache = cache;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task ChangeStatus(int id, ChangeApplicationStatusRequest request, CancellationToken cancellationToken)
@@ -59,30 +63,32 @@ public class ApplicationsService : IApplicationsService
         await _cache.RemoveByPrefixAsync(userCachePrefix);
         _logger.LogInformation("Invalidated user applications cache for User ID: {UserId}", app.UserId);
         
-        //Тригерить подію для Notification Service
+        await _publishEndpoint.Publish(new ApplicationStatusChangedEvent(app.Id, app.JobPost?.Title ?? "Unknown Job", app.UserEmail, app.UserFirstName, request.Status.ToString()), cancellationToken);
     }
 
-    public async Task Create(int jobId, int userId, CreateApplicationRequest request, CancellationToken cancellationToken)
+    public async Task Create(CreateApplicationRequest request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Processing application: User {UserId} for Job {JobId}", userId, jobId);
+        _logger.LogInformation("Processing application: User {UserId} for Job {JobId}", request.UserId, request.JobId);
 
-        var job = await _jobsRepository.GetById(jobId, cancellationToken);
+        var job = await _jobsRepository.GetById(request.JobId, cancellationToken);
         if (job == null)
         {
-            _logger.LogWarning("Application failed: Job ID {JobId} does not exist", jobId);
-            throw new NotFoundException($"Job post with id {jobId} not found");
+            _logger.LogWarning("Application failed: Job ID {JobId} does not exist", request.JobId);
+            throw new NotFoundException($"Job post with id {request.JobId} not found");
         }
 
         if (!job.IsActive)
         {
-            _logger.LogWarning("Application rejected: Job ID {JobId} is inactive", jobId);
+            _logger.LogWarning("Application rejected: Job ID {JobId} is inactive", request.JobId);
             throw new BadRequestException("You cannot apply for a closed job position.");
         }
 
         var app = new UserApplication
         {
-            JobPostId = jobId,
-            UserId = userId,
+            JobPostId = request.JobId,
+            UserId = request.UserId,
+            UserEmail =  request.Email,
+            UserFirstName =  request.FirstName,
             CoverLetter = request.CoverLetter,
             Status = ApplicationStatusEnum.Pending,
             CreatedAt = DateTime.UtcNow
@@ -91,12 +97,12 @@ public class ApplicationsService : IApplicationsService
         _applicationRepository.Add(app);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Application ID {AppId} created for User {UserId}", app.Id, userId);
+        _logger.LogInformation("Application ID {AppId} created for User {UserId}", app.Id, request.UserId);
     
-        await _cache.RemoveByPrefixAsync($"{UserAppsPrefix}:{userId}:");
-        _logger.LogDebug("Cleared application cache for User {UserId}", userId);
+        await _cache.RemoveByPrefixAsync($"{UserAppsPrefix}:{request.UserId}:");
+        _logger.LogDebug("Cleared application cache for User {UserId}", request.UserId);
         
-        //Тригерить подію для Notification Service
+        await _publishEndpoint.Publish(new JobApplicationCreatedEvent(app.Id, job.Title,request.Email,request.FirstName), cancellationToken);
     }
 
     public async Task<ResponseList<UserApplicationResponse>> GetUserApplications(int userId, UserApplicationRequest request, CancellationToken cancellationToken)

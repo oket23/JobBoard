@@ -21,8 +21,15 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         var message = context.Message;
         _logger.LogInformation("Sending welcome email to: {Email} for user {FirstName}", message.Email, message.FirstName);
 
-        await _emailService.SendWelcomeEmailAsync(message.Email, message.FirstName);
+        try
+        {
+            await _emailService.SendWelcomeEmailAsync(message.Email, message.FirstName);
+            _logger.LogInformation("Email sent successfully to {Email}", message.Email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send login email to {Email}", message.Email);
+        }
         
-        _logger.LogInformation("Email sent successfully to {Email}", message.Email);
     }
 }

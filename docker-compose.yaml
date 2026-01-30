@@ -31,7 +31,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
-      - "${RABBITMQ_PORT}:5672"       # AMQP для MassTransit
+      - "${RABBITMQ_PORT}:5672"       # AMQP for MassTransit
       - "${RABBITMQ_MGMT_PORT}:15672" # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -51,7 +51,7 @@ services:
     image: jaegertracing/all-in-one:latest
     restart: unless-stopped
     ports:
-      - "16686:16686" # Web UI (тут ти будеш дивитися графіки)
+      - "16686:16686" # Web UI 
       - "4317:4317"   # OTLP gRPC receiver (сюди .NET шле дані)
       - "4318:4318"   # OTLP HTTP receiver
     environment:
@@ -79,20 +79,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # --- Email Service (Production-Ready) ---
-  # SMTP сервер для реальної відправки листів
-  mailhog:
-    container_name: jobboard-mailhog
-    image: mailhog/mailhog:latest
-    restart: unless-stopped
-    ports:
-      - "${MAILHOG_SMTP_PORT}:1025" # SMTP (для Notification Service)
-      - "${MAILHOG_UI_PORT}:8025"   # Web UI для перегляду листів
-    networks:
-      - jobboard-network
-    # MailHog перехоплює листи локально (для dev/testing)
-    # Для Production замініть на реальний SMTP (Gmail, SendGrid, AWS SES)
 
   # --- Observability (Logging) ---
   seq:
@@ -123,13 +109,10 @@ services:
     restart: unless-stopped
     ports:
       - "${GATEWAY_PORT}:8080"  # HTTP
-      - "${GATEWAY_HTTPS_PORT}:8081" # HTTPS (якщо налаштовано)
+      - "${GATEWAY_HTTPS_PORT}:8081" # HTTPS 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8080
-      # YARP Routing (конфігурація в appsettings.json або env)
-      - ReverseProxy__Clusters__identityCluster__Destinations__destination1__Address=http://identity-api:8080
-      - ReverseProxy__Clusters__recruitmentCluster__Destinations__destination1__Address=http://recruitment-api:8080
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
@@ -165,9 +148,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       # Database
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=identity_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Include Error Detail=true
-      # Redis
-      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD},defaultDatabase=0
-      # RabbitMQ - Використовуємо змінні з .env
+      # RabbitMQ
       - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:${RABBITMQ_PORT}/
       # JWT Settings
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
@@ -187,8 +168,6 @@ services:
       - jobboard-network
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -212,14 +191,12 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8080
-      # Database (окрема БД на тому ж PostgreSQL)
+      # Database 
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=recruitment_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Include Error Detail=true
       # Redis
       - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD},defaultDatabase=1
-      # RabbitMQ - Використовуємо змінні з .env
+      # RabbitMQ 
       - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:${RABBITMQ_PORT}/
-      # Identity Service (для /users/batch)
-      - IdentityService__BaseUrl=http://identity-api:8080
       # JWT для валідації токенів
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER}
@@ -262,14 +239,9 @@ services:
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      # RabbitMQ Consumer - Використовуємо змінні з .env
+      # RabbitMQ Consumer
       - ConnectionStrings__RabbitMQ=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:${RABBITMQ_PORT}/
-      # Email SMTP Settings (MailHog для dev, реальний SMTP для prod)
-      # - EmailSettings__SmtpHost=mailhog
-      # - EmailSettings__SmtpPort=1025
-      # - EmailSettings__FromEmail=noreply@jobboard.com
-      # - EmailSettings__FromName=JobBoard Recruitment
-      # Для Production (Gmail/SendGrid/AWS SES):
+      # Email SMTP Settings 
       - EmailSettings__SmtpHost=smtp.gmail.com
       - EmailSettings__SmtpPort=587
       - EmailSettings__Username=${SMTP_USERNAME}
@@ -277,8 +249,6 @@ services:
       - EmailSettings__EnableSsl=true
       - EmailSettings__FromEmail=${SMTP_USERNAME}
       - EmailSettings__FromName=JobBoard Team
-      # Redis (для idempotency)
-      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD},defaultDatabase=2
       # Logging
       - Serilog__WriteTo__0__Name=Seq
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
@@ -290,10 +260,6 @@ services:
       - jobboard-network
     depends_on:
       rabbitmq:
-        condition: service_healthy
-      mailhog:
-        condition: service_started
-      redis:
         condition: service_healthy
 
 volumes:

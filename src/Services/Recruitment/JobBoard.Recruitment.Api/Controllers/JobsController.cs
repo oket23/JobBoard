@@ -10,6 +10,8 @@ namespace JobBoard.Recruitment.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/jobs")]
+[Produces("application/json")]
+[Tags("Jobs Management")]
 public class JobsController : ControllerBase
 {
     private readonly IJobsServices _jobsService;
@@ -21,6 +23,9 @@ public class JobsController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiSuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse),StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] CreateJobRequest request, CancellationToken ct)
     {
         await _jobsService.Create(request, ct);
@@ -29,6 +34,7 @@ public class JobsController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiSuccessResponse<ResponseList<JobResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] JobRequest request, CancellationToken ct)
     {
         var result = await _jobsService.GetAll(request, ct);
@@ -37,6 +43,9 @@ public class JobsController : ControllerBase
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiSuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse),StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateJobRequest request, CancellationToken ct)
     {
         await _jobsService.Update(id, request, ct);
@@ -45,6 +54,9 @@ public class JobsController : ControllerBase
 
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiSuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse),StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken ct)
     {
         await _jobsService.Delete(id, ct);

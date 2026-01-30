@@ -22,7 +22,11 @@ public class Program
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(x =>
+            {
+                x.SwaggerEndpoint("/swagger/identity/swagger/v1/swagger.json", "Identity API (Auth & Users) v1");
+                x.SwaggerEndpoint("/swagger/recruitment/swagger/v1/swagger.json", "Recruitment API (Jobs & Apps) v1");
+            });
         }
         
         app.MapHealthChecks("/health");

@@ -12,6 +12,8 @@ namespace JobBoard.Recruitment.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/applications")]
+[Produces("application/json")]
+[Tags("Applications Management")]
 public class ApplicationsController : ControllerBase
 {
     private readonly IApplicationsService _applicationsService;
@@ -23,6 +25,9 @@ public class ApplicationsController : ControllerBase
 
     [HttpPost("{jobId:int}")]
     [Authorize(Roles = "User")]
+    [ProducesResponseType(typeof(ApiSuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse),StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Submit([FromRoute] int jobId, [FromBody] CreateApplicationRequest request, CancellationToken ct)
     {
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
@@ -55,7 +60,8 @@ public class ApplicationsController : ControllerBase
     }
 
     [HttpGet("user")]
-    [Authorize(Roles = "User")]
+    [ProducesResponseType(typeof(ApiSuccessResponse<ResponseList<UserApplicationResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse),StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetMyApplications([FromQuery] UserApplicationRequest request,CancellationToken ct)
     {
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
@@ -70,6 +76,9 @@ public class ApplicationsController : ControllerBase
     
     [HttpPut("{id:int}/status")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiSuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse),StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> UpdateStatus([FromRoute] int id, [FromBody] ChangeApplicationStatusRequest request, CancellationToken ct)
     {
          await _applicationsService.ChangeStatus(id, request, ct);

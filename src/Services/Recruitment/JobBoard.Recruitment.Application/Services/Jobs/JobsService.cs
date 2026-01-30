@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JobBoard.Recruitment.Application.Services.Jobs;
 
-public class JobsService : IJobsServices
+public class JobsService : IJobsService
 {
     private readonly IJobsRepository _repository;
     private readonly ILogger<JobsService> _logger;

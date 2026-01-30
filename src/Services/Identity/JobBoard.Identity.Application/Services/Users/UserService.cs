@@ -5,6 +5,7 @@ using JobBoard.Identity.Domain.Abstractions.Services;
 using JobBoard.Identity.Domain.Requests.Users;
 using JobBoard.Identity.Domain.Response;
 using JobBoard.Identity.Domain.Response.Users;
+using JobBoard.Shared.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace JobBoard.Identity.Application.Services.Users;
@@ -39,7 +40,7 @@ public class UserService : IUserService
         if (user == null)
         {
             _logger.LogWarning("User with id {Id} not found", id);
-            throw new KeyNotFoundException($"User with id {id} not found"); 
+            throw new NotFoundException($"User with id {id} not found"); 
         }
 
         return user.ToResponse();
@@ -91,10 +92,9 @@ public class UserService : IUserService
         if (user == null)
         {
             _logger.LogWarning("User with id {Id} not found for update", id);
-            throw new KeyNotFoundException($"User with id {id} not found");
+            throw new NotFoundException($"User with id {id} not found");
         };
         
-        user.DateOfBirth = request.DateOfBirth ?? user.DateOfBirth;
         user.Gender = request.Gender ?? user.Gender;
         user.FirstName = request.FirstName ?? user.FirstName;
         user.LastName = request.LastName ?? user.LastName;
@@ -115,10 +115,10 @@ public class UserService : IUserService
         if (user == null)
         {
             _logger.LogWarning("User with id {Id} not found for deletion", id);
-            throw new KeyNotFoundException($"User with id {id} not found");
+            throw new NotFoundException($"User with id {id} not found");
         }
 
-        _userRepository.Delete(user);
+        _userRepository.HardDelete(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         
         _logger.LogInformation("User with id: {Id} deleted successfully", id);

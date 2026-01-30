@@ -45,4 +45,10 @@ public class ApplicationsRepository : RepositoryBase<UserApplication>, IApplicat
             Offset = request.Offset
         };
     }
+    public override async ValueTask<UserApplication?> GetById(int id, CancellationToken cancellationToken)
+    {
+        return await Set<UserApplication>()
+            .Include(x => x.JobPost)
+            .SingleOrDefaultAsync(x => x.Id == id,cancellationToken);
+    }
 }

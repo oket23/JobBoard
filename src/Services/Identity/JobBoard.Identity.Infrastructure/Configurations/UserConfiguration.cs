@@ -37,7 +37,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasConversion<string>()
             .HasMaxLength(20);
         
-        builder.HasQueryFilter(x => x.DeletedAt == null);
+        builder.Property(u => u.DateOfBirth)
+            .HasColumnType("date")
+            .IsRequired();
+        
+            //builder.HasQueryFilter(x => x.DeletedAt == null);
         
         builder.HasMany(u => u.RefreshTokens)
             .WithOne(r => r.User)

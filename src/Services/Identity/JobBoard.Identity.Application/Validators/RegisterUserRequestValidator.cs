@@ -32,15 +32,17 @@ public class RegisterUserRequestValidator : AbstractValidator<RegisterUserReques
         
         RuleFor(x => x.DateOfBirth)
             .NotEmpty().WithMessage("Date of birth is required")
-            .LessThan(DateTime.UtcNow).WithMessage("Date of birth cannot be in the future")
-            .Must(BeAtLeast3YearsOld).WithMessage("User must be at least 14 years old");
+            .LessThan(DateOnly.FromDateTime(DateTime.UtcNow))
+            .WithMessage("Date of birth cannot be in the future")
+            .Must(BeAtLeast3YearsOld).WithMessage("User must be at least 3 years old");
         
         RuleFor(x => x.Gender)
             .IsInEnum().WithMessage("Invalid gender value. Allowed values are: Male, Female, NotSpecified");
     }
     
-    private bool BeAtLeast3YearsOld(DateTime dateOfBirth)
+    private bool BeAtLeast3YearsOld(DateOnly dateOfBirth)
     {
-        return dateOfBirth <= DateTime.UtcNow.AddYears(-3);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return dateOfBirth <= today.AddYears(-3);
     }
 }

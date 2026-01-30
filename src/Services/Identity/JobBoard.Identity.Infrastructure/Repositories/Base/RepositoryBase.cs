@@ -31,8 +31,13 @@ public abstract class RepositoryBase<TEntity> where TEntity : class
     public virtual void Delete(TEntity entity)
     {
         if(entity is BaseEntity baseEntity)
-            baseEntity.DeletedAt = DateTime.Now;
+            baseEntity.DeletedAt = DateTime.UtcNow;
         else
             _context.Remove(entity);
+    }
+
+    public virtual void HardDelete(TEntity entity)
+    {
+        _context.Remove(entity);
     }
 }

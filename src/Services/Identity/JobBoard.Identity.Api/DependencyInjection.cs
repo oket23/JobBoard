@@ -61,6 +61,11 @@ public static class DependencyInjection
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
         
+        services.Configure<JsonOptions>(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
+        
         services.AddMassTransit(x =>
         {
             x.UsingRabbitMq((context, cfg) =>

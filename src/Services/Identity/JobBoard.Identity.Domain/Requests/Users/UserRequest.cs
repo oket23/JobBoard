@@ -8,8 +8,8 @@ public class UserRequest : PaginationBase
     public string? Email { get; set; }
     public UserRole? Role { get; set; }
     public UserGender? Gender { get; set; }
-    public DateTime? BornFrom { get; set; }
-    public DateTime? BornTo { get; set; }
+    public DateOnly? BornFrom { get; set; }
+    public DateOnly? BornTo { get; set; }
     public DateTime? CreatedFrom { get; set; }
     public DateTime? CreatedTo { get; set; }
 }

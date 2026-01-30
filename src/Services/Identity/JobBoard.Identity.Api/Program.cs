@@ -16,6 +16,8 @@ public class Program
         builder.AddSerilogLogging();
         builder.Services.AddIdentityApi(builder.Configuration);
         
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        
         var app = builder.Build();
         
         app.UseSerilogRequestLogging();
@@ -47,7 +49,7 @@ public class Program
     
             await db.MigrateAsync();
         }
-        
+
         app.Run();
     }
 }

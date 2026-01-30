@@ -14,9 +14,9 @@ namespace JobBoard.Recruitment.Api.Controllers;
 [Tags("Jobs Management")]
 public class JobsController : ControllerBase
 {
-    private readonly IJobsServices _jobsService;
+    private readonly IJobsService _jobsService;
 
-    public JobsController(IJobsServices jobsService)
+    public JobsController(IJobsService jobsService)
     {
         _jobsService = jobsService;
     }

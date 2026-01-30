@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using JobBoard.Recruitment.Domain.Abstractions.Services;
+using JobBoard.Recruitment.Domain.DTOs;
 using JobBoard.Recruitment.Domain.Requests.Applications;
 using JobBoard.Recruitment.Domain.Response;
 using JobBoard.Recruitment.Domain.Response.Applications;
@@ -24,11 +25,10 @@ public class ApplicationsController : ControllerBase
     }
 
     [HttpPost("{jobId:int}")]
-    [Authorize(Roles = "User")]
     [ProducesResponseType(typeof(ApiSuccessResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse),StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Submit([FromRoute] int jobId, [FromBody] CreateApplicationRequest request, CancellationToken ct)
+    public async Task<IActionResult> Submit([FromRoute] int jobId, [FromBody] CreateApplicationRequestDto request, CancellationToken ct)
     {
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
                            

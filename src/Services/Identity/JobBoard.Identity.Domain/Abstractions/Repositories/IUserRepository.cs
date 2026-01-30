@@ -9,6 +9,7 @@ public interface IUserRepository
     void Add(User user);
     void Update(User user);
     void Delete(User user);
+    void HardDelete(User user);
     Task<ResponseList<User>> GetAll(UserRequest request, CancellationToken cancellationToken);
     ValueTask<User?> GetById(int id, CancellationToken cancellationToken);
     Task<ResponseList<User>> GetUsersByIds(GetUsersBatchRequest request, CancellationToken cancellationToken);

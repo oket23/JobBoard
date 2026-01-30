@@ -4,7 +4,7 @@ using JobBoard.Recruitment.Domain.Response.Jobs;
 
 namespace JobBoard.Recruitment.Domain.Abstractions.Services;
 
-public interface IJobsServices
+public interface IJobsService
 {
     Task<ResponseList<JobResponse>> GetAll(JobRequest request, CancellationToken cancellationToken);
     Task Create(CreateJobRequest request, CancellationToken cancellationToken);

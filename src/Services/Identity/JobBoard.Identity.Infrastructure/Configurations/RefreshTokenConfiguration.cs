@@ -24,6 +24,6 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .WithMany(u => u.RefreshTokens)
             .HasForeignKey(rt => rt.UserId);
         
-        builder.HasQueryFilter(x => x.DeletedAt == null);
+        //builder.HasQueryFilter(x => x.DeletedAt == null);
     }
 }
